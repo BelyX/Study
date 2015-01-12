@@ -60,7 +60,7 @@ int acceptClient(int listenfd, struct sockaddr_in* sockaddr)
       perror("connfd<0\n");
       exit(1);
    }
-   char *str = inet_ntoa(clientaddr.sin_addr);
+   char *str = inet_ntoa(sockaddr->sin_addr);
    printf("connect from: %s\n", str);
 
    return clientfd;

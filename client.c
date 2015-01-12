@@ -18,10 +18,10 @@ int main(int argc, char **argv)
   clientfd = Createsockfd(AF_INET,SOCK_STREAM);
   initsocket(&servaddr,argc,argv);
 
-  //connet socket 
+  //connet socket
   dbtime_startTest("Connect & Recv");
   connectClient(clientfd,&servaddr);
-  
+
   int nClose = 0;
   int flag = 0;
   int nCount = 0; 

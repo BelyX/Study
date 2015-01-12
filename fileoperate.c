@@ -17,3 +17,4 @@ FILE* openfile(char* filename, char* opentype)
 	}
 	return fp;
 }
+

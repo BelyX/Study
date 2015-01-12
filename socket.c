@@ -71,7 +71,7 @@ int acceptClient(int listenfd, struct sockaddr_in* sockaddr)
 int connectClient(int serverfd, struct sockaddr_in* serveraddr)
 {
    int nlength = sizeof(*serveraddr);
-   if(connect(serverfd, (struct sockaddr*)serveraddr, &nlength)<0)
+   if(connect(serverfd, (struct sockaddr*)serveraddr, nlength)<0)
    {
       perror("fail to connect server\n");
       exit(1);

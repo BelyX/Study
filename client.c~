@@ -16,12 +16,27 @@ int main(int argc, char **argv)
 
   // create a socket
   clientfd = Createsockfd(AF_INET,SOCK_STREAM);
+
+  initsocket(&servaddr,argc,argv);
+  //connet socket
+  int nlength=0;
+  dbtime_startTest("Connect & Recv");
+  connectClient(clientfd,&servaddr);
+
+ /* // create a socket
+  
   initsocket(&servaddr,argc,argv);
 
   //connet socket 
   dbtime_startTest("Connect & Recv");
-  connectClient(clientfd,&servaddr);
+  //connectClient(clientfd,&servaddr);
   
+  int nlength = sizeof(serveraddr);
+   if(connect(serverfd, (struct sockaddr*)serveraddr, &nlength)<0)
+   {
+      perror("fail to connect server\n");
+      exit(1);
+   }*/
   int nClose = 0;
   int flag = 0;
   int nCount = 0; 

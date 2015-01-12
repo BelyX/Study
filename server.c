@@ -40,13 +40,7 @@ int main(int argc, char **argv)
 
     
     setnonblocking(listenfd);
-    event.data.fd = listenfd;
-    event.events = EPOLLIN | EPOLLET;
-    if(epoll_ctl(efd, EPOLL_CTL_ADD,listenfd,&event)<0)
-    {
- 	perror("epoll_ctl failed\n");
-        exit(1);
-    }
+    changeepollctl(efd,listenfd,EPOLLIN|EPOLLET);
 
     for( ; ;)
     {
@@ -58,21 +52,12 @@ int main(int argc, char **argv)
 	    {
 		clientfd = acceptClient(listenfd,&clientaddr);
 		setnonblocking(clientfd);
-                
-        	/*fp = fopen("1.txt","r+");
-		if(fp == NULL)
-        	{
-	    	   perror("file fail to open\n");
-            	   continue;
-        	}  */
 
                 if((fp = openfile("1.txt","r+")) == NULL)
                 {
                     continue;
                 }
-                event.data.fd = clientfd;
-                event.events = EPOLLIN | EPOLLET | EPOLLOUT;
-                epoll_ctl(efd,EPOLL_CTL_ADD,clientfd,&event);
+                changeepollctl(efd,clientfd,EPOLLIN | EPOLLET | EPOLLOUT);
 	    }
 
 	    else if(events[i].events & EPOLLIN)
@@ -84,9 +69,7 @@ int main(int argc, char **argv)
 		
 		if(epollIn(sockfd,&events[i]) == 1)
                 {
-                    event.data.fd = sockfd;
-                    event.events = EPOLLOUT | EPOLLET;
-                    epoll_ctl(efd,EPOLL_CTL_MOD,sockfd,&event);
+                    changeepollctl(efd,sockfd,EPOLLOUT | EPOLLET);
                 }
 		
             }
@@ -117,9 +100,7 @@ int main(int argc, char **argv)
                    }
 		} 
                 fclose(fp);
-                event.data.fd = sockfd;
-                event.events = EPOLLIN|EPOLLET;
-	        epoll_ctl(efd,EPOLL_CTL_MOD,sockfd,&event); 
+                changeepollctl(efd,sockfd,EPOLLIN|EPOLLET);
 	    }
 	}
     }

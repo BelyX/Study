@@ -24,6 +24,19 @@ void setnonblocking(int sock)
     }
 }
 
+int changeepollctl(int epfd,int sockfd,int op)
+{
+    struct epoll_event event;
+    event.data.fd = sockfd;
+    event.events = op;
+    if(epoll_ctl(efd, EPOLL_CTL_ADD,sockfd,&event)<0)
+    {
+ 	perror("epoll_ctl failed\n");
+        exit(1);
+    }
+    return 0;
+}
+
 int epollIn(int sockfd,struct epoll_event* event)
 {
    char line[MAXLINE];
@@ -173,7 +186,7 @@ int epollOut(int sockfd,struct epoll_event* event, char *pstr)
 
    if(bWritten == 1)
    {
-	printf("send to client:%s\n",head);
+	//printf("send to client:%s\n",head);
 	return 1;
    }
    return 0;
