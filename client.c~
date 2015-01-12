@@ -5,51 +5,28 @@
 #include <stdio.h>
 #include <string.h>
 #include "dbtime.h"
+#include "socket.h"
+#include "fileoperate.h"
 
-#define SERVER_PORT 9000
 int main(int argc, char **argv)
 {
   struct sockaddr_in servaddr;
 
   int clientfd;
-  char serverip[50] = "127.0.0.1";
-  
-  int nPort=SERVER_PORT;
-  if(argc>1)
-  {
-     nPort = atoi(argv[1]);
-  }
 
   // create a socket
-  clientfd = socket(AF_INET,SOCK_STREAM,0);
-  if(clientfd<0)
-  {
-    printf("create socket failed!\n");
-    exit(1);
-  }
-  bzero(&servaddr,sizeof(struct sockaddr_in));
-  servaddr.sin_family=AF_INET;
-  servaddr.sin_port=htons(nPort);
-  servaddr.sin_addr.s_addr = inet_addr("127.0.0.1");
-
-
+  clientfd = Createsockfd(AF_INET,SOCK_STREAM);
+  initsocket(&servaddr,argc,argv);
 
   //connet socket 
-  int nlength=0;
   dbtime_startTest("Connect & Recv");
-  if(connect(clientfd,(struct sockaddr*)&servaddr,sizeof(servaddr))<0)
-  {
-     printf("server accept failed\n");
-     exit(1);
-  }
-
-  
+  connectClient(clientfd,&servaddr);
   
   int nClose = 0;
   int flag = 0;
   int nCount = 0; 
   int nWrite = 0;
-  int nNum = 0;
+  long int nNum = 0;
   long int filesize = 1;
   FILE* fp = NULL;
   while(1)
@@ -73,12 +50,11 @@ int main(int argc, char **argv)
        buffer[nClose] = '\0';
        filesize = atol(buffer);
        printf("filesize : %ld\n",filesize);
-       fp = fopen("test.txt","w+");
-       if(fp == NULL)
+
+       if((fp = openfile("test.txt","w+")) == NULL)
        {
-	  printf("fail to create file\n");
           break;
-       } 
+       }
        flag = 1;
        continue;
     }
@@ -96,9 +72,10 @@ int main(int argc, char **argv)
     
     if(nWrite==0)
     {
-       printf("fail to read file\n");
+       printf("fail to write file\n");
     }
     fclose(fp);
+
     fp = fopen("test.txt","a+");
     nNum += nClose;
     printf("nNum :%ld\n",nNum);

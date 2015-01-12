@@ -10,7 +10,7 @@
 #include<stdlib.h>
 #define SERVER_PORT 9000
 
-int initsocket(struct sockaddr_in *sockaddr, int argc, char** argv);
+int initsocket(struct sockaddr_in *sockaddr, int argc, char* argv);
 int Createsockfd(int af,int type);
 int Bind(int sockfd, struct sockaddr_in* sockaddr);
 int Listen(int sockfd, int listenNum);
