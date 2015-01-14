@@ -17,8 +17,9 @@
 #include<stdlib.h>
 #include<string.h>
 #define MAXLINE 1024
-#define SERVER_PORT 9000
+
 void setnonblocking(int sock);
-int epollOut(int sockfd,struct epoll_event* event, char *pstr);
-int epollIn(int sockfd,struct epoll_event* event);
+int changeepollctl(int epfd,int sockfd,uint32_t events,int op);
+int epollOut(int sockfd,struct epoll_event* event, char *pstr,struct sockaddr_in servaddr);
+int epollIn(int sockfd,struct epoll_event* event,struct sockaddr_in servaddr);
 #endif

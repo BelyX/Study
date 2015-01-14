@@ -76,7 +76,7 @@ int connectClient(int serverfd, struct sockaddr_in* serveraddr)
       perror("fail to connect server\n");
       exit(1);
    }
-
+   printf("succeed to connect !!!\n");
    return 0;
 }
 

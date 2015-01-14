@@ -1,9 +1,3 @@
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
 #include "dbtime.h"
 #include "socket.h"
 #include "fileoperate.h"
@@ -11,8 +5,9 @@
 int main(int argc, char **argv)
 {
   struct sockaddr_in servaddr;
-
+  struct sockaddr_in remoteaddr;
   int clientfd;
+  int udpfd;
 
   // create a socket
   clientfd = Createsockfd(AF_INET,SOCK_STREAM);
@@ -22,6 +17,12 @@ int main(int argc, char **argv)
   dbtime_startTest("Connect & Recv");
   connectClient(clientfd,&servaddr);
 
+  //UDP connection
+  char line[1024];
+  int sin_size=sizeof(struct sockaddr_in);
+  udpfd = Createsockfd(PF_INET,SOCK_DGRAM);
+  Bind(udpfd,&servaddr);
+  
   int nClose = 0;
   int flag = 0;
   int nCount = 0; 
@@ -36,9 +37,9 @@ int main(int argc, char **argv)
     {
        dbtime_endAndShow();
        dbtime_startTest ("Sleep 5s");
-        sleep(5);
-	dbtime_endAndShow ();
-	dbtime_finalize ();
+       sleep(5);
+       dbtime_endAndShow ();
+       dbtime_finalize ();
        fclose(fp);
        printf(" ***********over**********\n");
     }

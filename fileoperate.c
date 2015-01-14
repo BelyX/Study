@@ -18,3 +18,13 @@ FILE* openfile(char* filename, char* opentype)
 	return fp;
 }
 
+long int Getfilesize(const char* filename)
+{
+   struct stat fileInfo;
+   if(NULL == filename)
+   {
+ 	return 0;
+   }
+   stat(filename,&fileInfo);
+   return fileInfo.st_size;
+}
