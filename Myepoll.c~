@@ -141,8 +141,8 @@ int epollOut(int sockfd,struct epoll_event* event, char *pstr,struct sockaddr_in
    memcpy(line,pstr,strlen(pstr));
    while(1)
    {
-      writenlen = write(sockfd,head+count,strlen(head+count));
-      //writenlen = sendto(sockfd,head+count,strlen(head+count),0,(struct sockaddr*)&servaddr,sizeof(struct sockaddr));
+      //writenlen = write(sockfd,head+count,strlen(head+count));
+      writenlen = sendto(sockfd,head+count,strlen(head+count),0,(struct sockaddr*)&servaddr,sizeof(struct sockaddr));
       printf("writenlen :%d,  count : %d \n",writenlen,count);
      // printf("pstr: %s\n", head+count);
       if(writenlen == -1)

@@ -53,13 +53,22 @@ int main(int argc, char **argv)
 		clientfd = acceptClient(listenfd,&clientaddr);
 		setnonblocking(clientfd);
                 udpfd = Createsockfd(PF_INET,SOCK_DGRAM);
-
+int recvNum;
+recvNum=recvfrom(udpfd,line,MAXLINE,0,(struct sockaddr*)&servaddr,&sin_size);
+   line[recvNum] = '\0';
+   if(recvNum < 0)
+   {
+        perror("recvNum\n");
+	return 0;
+   }
+   printf("recvNum:%s \n", line);
 
                 if((fp = openfile("1.txt","r+")) == NULL)
                 {
                     continue;
                 }
                 changeepollctl(efd,clientfd,EPOLLIN | EPOLLET | EPOLLOUT,EPOLL_CTL_ADD);
+                changeepollctl(efd,udpfd,EPOLLIN | EPOLLET | EPOLLOUT,EPOLL_CTL_ADD);
 	    }
 
 	    else if(events[i].events & EPOLLIN)
@@ -68,9 +77,10 @@ int main(int argc, char **argv)
 		{
 		    continue;
 		}
-		
-		if(epollIn(udpfd,&events[i],servaddr) == 1)
+
+		if(epollIn(sockfd,&events[i],servaddr) == 1)
                 {
+                    printf("222222222222222222222\n");
                     changeepollctl(efd,sockfd,EPOLLOUT | EPOLLET,EPOLL_CTL_MOD);
                 }
 		
@@ -81,14 +91,19 @@ int main(int argc, char **argv)
 		sockfd = events[i].data.fd;
                 char pstr[1024];
                 int nCount = 0;
-                long int filesize = Getfilesize("1.txt");
-                sprintf(pstr,"%ld",filesize);
-                printf("filesize:%ld\n",filesize);
-                pstr[strlen(pstr)] = '\0';
-                nCount = write(sockfd,pstr,strlen(pstr));
-                printf("writenlen :%d\n",nCount);
+		int flag = 0;
+                if(flag == 0)
+		{
+                   long int filesize = Getfilesize("1.txt");
+                   sprintf(pstr,"%ld",filesize);
+                   printf("filesize:%ld\n",filesize);
+                   pstr[strlen(pstr)] = '\0';
+                   nCount = write(sockfd,pstr,strlen(pstr));
+                   printf("writenlen :%d\n",nCount);
+		   flag = 1;
+		}
                 
-		while(!feof(fp))
+		if(!feof(fp))
 		{
                    nCount = fread(pstr,1,SIZE_SEND,fp);
                    if(nCount==0)
@@ -96,13 +111,15 @@ int main(int argc, char **argv)
                      perror("fail to read file\n");
                    }
 		   pstr[nCount] = '\0';
-                   if(epollOut(sockfd,&events[i],pstr,servaddr) == 1)
+                   if(epollOut(sockfd,&events[i],pstr,clientaddr) == 1)
                    {
+                      changeepollctl(efd,sockfd,EPOLLIN|EPOLLET,EPOLL_CTL_MOD);
                       continue;
                    }
 		} 
                 fclose(fp);
-                changeepollctl(efd,sockfd,EPOLLIN|EPOLLET,EPOLL_CTL_MOD);
+                printf("fp\n");
+                //changeepollctl(efd,sockfd,EPOLLIN|EPOLLET,EPOLL_CTL_MOD);
 	    }
 	}
     }

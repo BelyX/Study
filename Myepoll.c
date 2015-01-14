@@ -38,7 +38,7 @@ int changeepollctl(int epfd,int sockfd,uint32_t events,int op)
     return 0;
 }
 
-int epollIn(int sockfd,struct epoll_event* event,struct sockaddr_in servaddr)
+int epollIn(int sockfd,struct epoll_event* event)
 {
    char line[MAXLINE];
    char *head = line;
@@ -47,20 +47,9 @@ int epollIn(int sockfd,struct epoll_event* event,struct sockaddr_in servaddr)
    int bReadOk = 0;
    memset(line,0,MAXLINE);
 
-   int sin_size=sizeof(struct sockaddr_in);
-   recvNum=recvfrom(sockfd,line,MAXLINE,0,(struct sockaddr*)&servaddr,&sin_size);
-   line[recvNum] = '\0';
-   if(recvNum < 0)
+   while(1)
    {
-        perror("recvNum\n");
-	return 0;
-   }
-   printf("recvNum:%s \n", line);
-   /*while(1)
-   {
-      //recvNum = read(sockfd,head+count,MAXLINE-1);
-      int sin_size=sizeof(struct sockaddr_in);
-      recvNum=recvfrom(sockfd,head+count,MAXLINE,0,(struct sockaddr*)&servaddr,&sin_size);
+      recvNum = read(sockfd,head+count,MAXLINE-1);
       if(recvNum < 0)
       {
 	 if(errno == EAGAIN)  //no data to be dealt with
@@ -123,12 +112,12 @@ int epollIn(int sockfd,struct epoll_event* event,struct sockaddr_in servaddr)
        line[count] = '\0';	   
        printf("%d data from client:%s\n",count,head);
        return 1;
-   }*/
+   }
 
-   return 1;
+   return 0;
 }
 
-int epollOut(int sockfd,struct epoll_event* event, char *pstr,struct sockaddr_in servaddr)
+int epollOut(int sockfd,struct epoll_event* event, char *pstr)
 {
    char line[MAXLINE];
    memset(line,0,sizeof(line));
@@ -142,9 +131,7 @@ int epollOut(int sockfd,struct epoll_event* event, char *pstr,struct sockaddr_in
    while(1)
    {
       writenlen = write(sockfd,head+count,strlen(head+count));
-      //writenlen = sendto(sockfd,head+count,strlen(head+count),0,(struct sockaddr*)&servaddr,sizeof(struct sockaddr));
-      printf("writenlen :%d,  count : %d \n",writenlen,count);
-     // printf("pstr: %s\n", head+count);
+      printf("writenlen :%d,  count : %d\n",writenlen,count);
       if(writenlen == -1)
       {
 			if(errno == EAGAIN)

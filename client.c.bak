@@ -70,7 +70,7 @@ int main(int argc, char **argv)
     }
     char psize[15];
     sprintf(psize,"%ld",nCount);
-    if((sendto(udpfd,psize,strlen(psize),0,(struct sockaddr*)&servaddr,sizeof(struct sockaddr)))<0)
+    if((sendto(udpfd,psize,strlen(psize),0,(struct sockaddr*)&remoteaddr,sizeof(struct sockaddr)))<0)
     {
         perror("sendto\n");
         break;

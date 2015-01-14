@@ -3,7 +3,7 @@
 
 #ifndef DBTIME_H
 #define DBTIME_H
-#include <stdio.h>
+
 // May also print to "outfile".
 extern char *dbtime_filename;
 

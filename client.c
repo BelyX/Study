@@ -1,14 +1,12 @@
-#include "dbtime.h"
 #include "socket.h"
-#include "fileoperate.h"
+#include "dbtime.h"
 
+#define SERVER_PORT 9000
 int main(int argc, char **argv)
 {
   struct sockaddr_in servaddr;
-  struct sockaddr_in remoteaddr;
-  int clientfd;
-  int udpfd;
 
+  int clientfd;
   // create a socket
   clientfd = Createsockfd(AF_INET,SOCK_STREAM);
   initsocket(&servaddr,argc,argv);
@@ -17,17 +15,11 @@ int main(int argc, char **argv)
   dbtime_startTest("Connect & Recv");
   connectClient(clientfd,&servaddr);
 
-  //UDP connection
-  char line[1024];
-  int sin_size=sizeof(struct sockaddr_in);
-  udpfd = Createsockfd(PF_INET,SOCK_DGRAM);
-  Bind(udpfd,&servaddr);
-  
   int nClose = 0;
   int flag = 0;
   int nCount = 0; 
   int nWrite = 0;
-  long int nNum = 0;
+  int nNum = 0;
   long int filesize = 1;
   FILE* fp = NULL;
   while(1)
@@ -37,9 +29,9 @@ int main(int argc, char **argv)
     {
        dbtime_endAndShow();
        dbtime_startTest ("Sleep 5s");
-       sleep(5);
-       dbtime_endAndShow ();
-       dbtime_finalize ();
+        sleep(5);
+	dbtime_endAndShow ();
+	dbtime_finalize ();
        fclose(fp);
        printf(" ***********over**********\n");
     }
@@ -51,15 +43,16 @@ int main(int argc, char **argv)
        buffer[nClose] = '\0';
        filesize = atol(buffer);
        printf("filesize : %ld\n",filesize);
-
-       if((fp = openfile("test.txt","w+")) == NULL)
+       fp = fopen("test.txt","w+");
+       if(fp == NULL)
        {
+	  printf("fail to create file\n");
           break;
-       }
+       } 
        flag = 1;
        continue;
     }
-    nClose = read(clientfd,buffer,1023);
+    nClose = read(clientfd,buffer,1024);
     buffer[nClose] = '\0';
     printf("count:%d\n",nCount++);
     printf("%d \n",nClose);
@@ -73,10 +66,9 @@ int main(int argc, char **argv)
     
     if(nWrite==0)
     {
-       printf("fail to write file\n");
+       printf("fail to read file\n");
     }
     fclose(fp);
-
     fp = fopen("test.txt","a+");
     nNum += nClose;
     printf("nNum :%ld\n",nNum);
