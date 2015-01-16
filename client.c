@@ -1,7 +1,8 @@
 #include "socket.h"
 #include "dbtime.h"
+#include "MD5.h"
+#define FILENAME "test.txt"
 
-#define SERVER_PORT 9000
 int main(int argc, char **argv)
 {
   struct sockaddr_in servaddr;
@@ -33,7 +34,22 @@ int main(int argc, char **argv)
 	dbtime_endAndShow ();
 	dbtime_finalize ();
        fclose(fp);
-       printf(" ***********over**********\n");
+
+       char md5_sum[MD5_LEN + 1];
+       if(!CalcFileMD5(FILENAME, md5_sum))
+      {
+       puts("Error occured!");
+       break;
+      }
+       nClose = read(clientfd,buffer,1023);
+       printf("buffer: %s\n", buffer);
+       if(strcmp(buffer,md5_sum) == 0)
+       {
+          printf(" ***********over**********\n");
+          break;
+       }
+       printf("*******the file has been modified*********\n");        
+        
     }
     
     
@@ -43,7 +59,7 @@ int main(int argc, char **argv)
        buffer[nClose] = '\0';
        filesize = atol(buffer);
        printf("filesize : %ld\n",filesize);
-       fp = fopen("test.txt","w+");
+       fp = fopen(FILENAME,"w+");
        if(fp == NULL)
        {
 	  printf("fail to create file\n");
@@ -52,7 +68,7 @@ int main(int argc, char **argv)
        flag = 1;
        continue;
     }
-    nClose = read(clientfd,buffer,1024);
+    nClose = read(clientfd,buffer,1023);
     buffer[nClose] = '\0';
     printf("count:%d\n",nCount++);
     printf("%d \n",nClose);
@@ -69,7 +85,7 @@ int main(int argc, char **argv)
        printf("fail to read file\n");
     }
     fclose(fp);
-    fp = fopen("test.txt","a+");
+    fp = fopen(FILENAME,"a+");
     nNum += nClose;
     printf("nNum :%ld\n",nNum);
   }

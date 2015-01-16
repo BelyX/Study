@@ -6,9 +6,10 @@
  ************************************************************************/
 
 #include "Myepoll.h"
-#include "socket.h"
 #include "fileoperate.h"
-#define SIZE_SEND 800
+#include "socket.h"
+#include "MD5.h"
+#define FILENAME "1.txt"
 
 
 int main(int argc, char **argv)
@@ -20,8 +21,7 @@ int main(int argc, char **argv)
     int listenfd;
     int clientfd;
     int sockfd;
-    int udpfd;
-    int nCount = 0;
+
     char line[MAXLINE];
     struct epoll_event event;
     struct epoll_event events[64];
@@ -29,18 +29,16 @@ int main(int argc, char **argv)
     struct sockaddr_in clientaddr;
     FILE *fp;
 
-
-    efd = epoll_create(256); 
-    printf("%d\n",efd);    
-
-    //建立TCP连接
     initsocket(&servaddr,argc,argv);
     listenfd = Createsockfd(AF_INET,SOCK_STREAM);
     Bind(listenfd,&servaddr);
     Listen(listenfd,5);
 
+    efd = epoll_create(256); 
+    printf("%d\n",efd);
     setnonblocking(listenfd);
-    changeepollctl(efd,listenfd,EPOLLIN|EPOLLET,EPOLL_CTL_ADD);
+
+    changeepollctl(efd,listenfd,EPOLLIN | EPOLLET,EPOLL_CTL_ADD);
 
     for( ; ;)
     {
@@ -52,23 +50,15 @@ int main(int argc, char **argv)
 	    {
 		clientfd = acceptClient(listenfd,&clientaddr);
 		setnonblocking(clientfd);
-                udpfd = Createsockfd(PF_INET,SOCK_DGRAM);
-int recvNum;
-recvNum=recvfrom(udpfd,line,MAXLINE,0,(struct sockaddr*)&servaddr,&sin_size);
-   line[recvNum] = '\0';
-   if(recvNum < 0)
-   {
-        perror("recvNum\n");
-	return 0;
-   }
-   printf("recvNum:%s \n", line);
-
-                if((fp = openfile("1.txt","r+")) == NULL)
-                {
-                    continue;
-                }
                 changeepollctl(efd,clientfd,EPOLLIN | EPOLLET | EPOLLOUT,EPOLL_CTL_ADD);
-                changeepollctl(efd,udpfd,EPOLLIN | EPOLLET | EPOLLOUT,EPOLL_CTL_ADD);
+       
+        	fp = fopen("1.txt","r+");
+		if(fp == NULL)
+        	{
+	    	   perror("file fail to open\n");
+            	   continue;
+        	}   
+
 	    }
 
 	    else if(events[i].events & EPOLLIN)
@@ -77,10 +67,9 @@ recvNum=recvfrom(udpfd,line,MAXLINE,0,(struct sockaddr*)&servaddr,&sin_size);
 		{
 		    continue;
 		}
-
-		if(epollIn(sockfd,&events[i],servaddr) == 1)
+		
+		if(epollIn(sockfd,&events[i]) == 1)
                 {
-                    printf("222222222222222222222\n");
                     changeepollctl(efd,sockfd,EPOLLOUT | EPOLLET,EPOLL_CTL_MOD);
                 }
 		
@@ -91,35 +80,38 @@ recvNum=recvfrom(udpfd,line,MAXLINE,0,(struct sockaddr*)&servaddr,&sin_size);
 		sockfd = events[i].data.fd;
                 char pstr[1024];
                 int nCount = 0;
-		int flag = 0;
-                if(flag == 0)
+                long int fsize = Getfilesize(FILENAME);
+                sprintf(pstr,"%ld",fsize);
+                printf("filesize:%ld\n",fsize);
+                pstr[strlen(pstr)] = '\0';
+                nCount = write(sockfd,pstr,strlen(pstr));
+                printf("writenlen :%d\n",nCount);
+		while(!feof(fp))
 		{
-                   long int filesize = Getfilesize("1.txt");
-                   sprintf(pstr,"%ld",filesize);
-                   printf("filesize:%ld\n",filesize);
-                   pstr[strlen(pstr)] = '\0';
-                   nCount = write(sockfd,pstr,strlen(pstr));
-                   printf("writenlen :%d\n",nCount);
-		   flag = 1;
-		}
-                
-		if(!feof(fp))
-		{
-                   nCount = fread(pstr,1,SIZE_SEND,fp);
+                   nCount = fread(pstr,1,100,fp);
                    if(nCount==0)
                    {
                      perror("fail to read file\n");
                    }
 		   pstr[nCount] = '\0';
-                   if(epollOut(sockfd,&events[i],pstr,clientaddr) == 1)
+                   if(epollOut(sockfd,&events[i],pstr) == 1)
                    {
-                      changeepollctl(efd,sockfd,EPOLLIN|EPOLLET,EPOLL_CTL_MOD);
                       continue;
                    }
 		} 
-                fclose(fp);
-                printf("fp\n");
-                //changeepollctl(efd,sockfd,EPOLLIN|EPOLLET,EPOLL_CTL_MOD);
+                fclose(fp); 
+		char md5_sum[MD5_LEN + 1];
+                if(!CalcFileMD5(FILENAME, md5_sum))
+       		{
+       			puts("Error occured!");
+      			return NULL;
+  		 }
+  
+  		printf("Success! MD5 sum is :%s \n", md5_sum);
+                nCount = write(sockfd,md5_sum,strlen(md5_sum));
+                printf(" md5_sum send :%s\n",md5_sum);
+                printf("writenlen :%d\n",nCount);
+                changeepollctl(efd,sockfd,EPOLLIN | EPOLLET,EPOLL_CTL_MOD);
 	    }
 	}
     }

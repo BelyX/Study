@@ -8,6 +8,8 @@
 #include "Myepoll.h"
 #include "fileoperate.h"
 #include "socket.h"
+#include "MD5.h"
+#define FILENAME "1.txt"
 
 
 int main(int argc, char **argv)
@@ -78,7 +80,7 @@ int main(int argc, char **argv)
 		sockfd = events[i].data.fd;
                 char pstr[1024];
                 int nCount = 0;
-                long int fsize = Getfilesize("1.txt");
+                long int fsize = Getfilesize(FILENAME);
                 sprintf(pstr,"%ld",fsize);
                 printf("filesize:%ld\n",fsize);
                 pstr[strlen(pstr)] = '\0';
@@ -98,6 +100,17 @@ int main(int argc, char **argv)
                    }
 		} 
                 fclose(fp); 
+		char md5_sum[MD5_LEN + 1];
+                if(!CalcFileMD5(FILENAME, md5_sum))
+       		{
+       			puts("Error occured!");
+      			return NULL;
+  		 }
+  
+  		printf("Success! MD5 sum is :%s \n", md5_sum);
+                nCount = write(sockfd,md5_sum,strlen(md5_sum));
+                printf(" md5_sum send :%s\n",md5_sum);
+                printf("writenlen :%d\n",nCount);
                 changeepollctl(efd,sockfd,EPOLLIN | EPOLLET,EPOLL_CTL_MOD);
 	    }
 	}
