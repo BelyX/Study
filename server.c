@@ -14,7 +14,6 @@ int main(int argc,char **argv)
         Listen(lsnfd,5);
 
 	signal(SIGCHLD,sig_handle);//注册消息处理函数
-	printf("\tYou are Welcome!\n\tI am waiting for a connection......\n");
 	while(1)
 	{		
 		confd = acceptClient(lsnfd,&cliaddr);
@@ -28,7 +27,7 @@ int main(int argc,char **argv)
 		{
 			int e = 0;	
 			close(lsnfd);//关闭父进程里的监听socket，因为子进程会复制父进程的所有资源
-			printf("OK:I received a connection!\n");
+			printf("connect a client!\n");
                         sendmd5(confd,FILENAME);
                         e = send_data(confd,FILENAME); 
                         exit(e);
