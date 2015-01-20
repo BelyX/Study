@@ -88,7 +88,7 @@ int main(int argc, char **argv)
                 printf("writenlen :%d\n",nCount);
 		while(!feof(fp))
 		{
-                   nCount = fread(pstr,1,100,fp);
+                   nCount = fread(pstr,1,256,fp);
                    if(nCount==0)
                    {
                      perror("fail to read file\n");

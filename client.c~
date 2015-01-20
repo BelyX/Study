@@ -1,11 +1,13 @@
 #include "socket.h"
 #include "dbtime.h"
 #include "MD5.h"
+#include <time.h>
 #define FILENAME "test.txt"
 
 int main(int argc, char **argv)
 {
   struct sockaddr_in servaddr;
+  time_t t_start,t_end;
 
   int clientfd;
   // create a socket
@@ -13,7 +15,8 @@ int main(int argc, char **argv)
   initsocket(&servaddr,argc,argv);
 
   //connet socket
-  dbtime_startTest("Connect & Recv");
+  //dbtime_startTest("Connect & Recv");
+  t_start = time(NULL);
   connectClient(clientfd,&servaddr);
 
   int nClose = 0;
@@ -28,15 +31,16 @@ int main(int argc, char **argv)
     char buffer[1024]={0};
     if(nNum >= filesize)
     {
-       dbtime_endAndShow();
+       /*dbtime_endAndShow();
        dbtime_startTest ("Sleep 5s");
         sleep(5);
 	dbtime_endAndShow ();
-	dbtime_finalize ();
+	dbtime_finalize ();*/
        fclose(fp);
 
+       t_end = time(NULL);
        char md5_sum[MD5_LEN + 1];
-       if(!CalcFileMD5(filename, md5_sum))
+       if(!CalcFileMD5(FILENAME, md5_sum))
       {
        puts("Error occured!");
        break;
@@ -46,10 +50,11 @@ int main(int argc, char **argv)
        if(strcmp(buffer,md5_sum) == 0)
        {
           printf(" ***********over**********\n");
-          break;
+          printf("the total time :%.0fs\n",difftime(t_end,t_start));
+          
        }
        printf("*******the file has been modified*********\n");        
-        
+       break;
     }
     
     

@@ -115,14 +115,14 @@ int CalcFileMD5(char *filename, char *md5_sum)
 
 char* GetfileMD5(char* filename)
 {
-   char md5_sum[MD5_LEN + 1];
+   char* md5_sum = (char*)malloc(MD5_LEN + 1);
    if(!CalcFileMD5(filename, md5_sum))
    {
        puts("Error occured!");
        return NULL;
    }
   
-   printf("Success! MD5 sum is :%s \n", md5_sum);
+   //printf("Success! MD5 sum is :%s \n", md5_sum);
    return md5_sum;
 }
 

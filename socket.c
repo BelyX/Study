@@ -1,24 +1,33 @@
 #include "socket.h"
 
-int initsocket(struct sockaddr_in *sockaddr, int argc, char** argv)
+
+/*消息处理函数*/
+void sig_handle(int signo)
 {
-   int nPort=SERVER_PORT;
-   if(argc>1)
-   {
-	nPort = atoi(argv[1]);
-   }
+	pid_t pid;
+	int	stat;
+
+	while((pid = waitpid(-1,&stat,WNOHANG)) > 0)
+		printf("child %d terminated\n",pid);
+	return ;	
+}
+
+
+int initsocket(struct sockaddr_in *sockaddr)
+{
    bzero(sockaddr,sizeof(struct sockaddr_in));
    (*sockaddr).sin_family = AF_INET;
-   (*sockaddr).sin_port=htons(nPort);
+   (*sockaddr).sin_port=htons(8888);
    (*sockaddr).sin_addr.s_addr = inet_addr("127.0.0.1");
    return 0;
 }
 
 
-int Createsockfd(int af,int type)
+int Createsockfd(struct sockaddr_in *sockaddr)
 {
    int sockfd;
-   sockfd = socket(af,type,0);
+   initsocket(sockaddr);
+   sockfd = socket(AF_INET,SOCK_STREAM,0);
    if(sockfd<0)
    {
       perror("fail to create socket!\n");
@@ -55,10 +64,17 @@ int acceptClient(int listenfd, struct sockaddr_in* sockaddr)
 {
    int nlength = sizeof(*sockaddr);
    int clientfd = accept(listenfd, (struct sockaddr*)sockaddr, &nlength);
-   if(clientfd <0 )
+   if(clientfd < 0)
    {
-      perror("connfd<0\n");
-      exit(1);
+	if(errno == EINTR)
+	{
+		return -1;
+	}
+	else	
+	{
+		printf("ERROR:accept failed!\n");	
+		exit(1);
+	}
    }
    char *str = inet_ntoa(sockaddr->sin_addr);
    printf("connect from: %s\n", str);
@@ -67,19 +83,39 @@ int acceptClient(int listenfd, struct sockaddr_in* sockaddr)
 }
 
 
-
-int connectClient(int serverfd, struct sockaddr_in* serveraddr)
+int tcp_connect(const char *host)
 {
-   int nlength = sizeof(*serveraddr);
-   if(connect(serverfd, (struct sockaddr*)serveraddr, nlength)<0)
-   {
-      perror("fail to connect server\n");
-      exit(1);
-   }
-   printf("succeed to connect !!!\n");
-   return 0;
+	struct hostent *hstent;
+	struct servent *svrent;
+	struct sockaddr_in sin;
+	int s;
+	memset(&sin,0,sizeof(sin));
+	sin.sin_family = AF_INET;
+	
+	if((sin.sin_port = htons(8888)) == 0 )
+	{
+		return -4;	
+	}
+	hstent = gethostbyname(host);
+	if(svrent)
+	{
+		memcpy(&sin.sin_addr,hstent->h_addr,hstent->h_length);
+	}
+	else if((sin.sin_addr.s_addr = inet_addr(host)) == INADDR_NONE)
+	{
+		return -3;
+	}
+	s = socket(AF_INET,SOCK_STREAM,0); 
+	if(s < 0)
+	{
+		return -2;	
+	}
+	if(connect(s,(struct sockaddr *)&sin,sizeof(sin)) < 0)
+	{
+		return -1;
+	}
+	return s;
 }
-
 
 
 

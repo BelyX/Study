@@ -1,95 +1,48 @@
 #include "socket.h"
-#include "dbtime.h"
+#include "fileoperate.h"
+#include <time.h>
 #include "MD5.h"
 #define FILENAME "test.txt"
 
-int main(int argc, char **argv)
+int main(int argc,char **argv)
 {
-  struct sockaddr_in servaddr;
+	char *host = "127.0.0.1";
+	int sockfd;
+        time_t t_start,t_end;
 
-  int clientfd;
-  // create a socket
-  clientfd = Createsockfd(AF_INET,SOCK_STREAM);
-  initsocket(&servaddr,argc,argv);
+	if(argc > 2)
+	{
+		printf("Usage:%ss[hostname or IP address]\n",argv[0]);
+		exit(1);
+	}
+	if(argc == 2)
+	{
+	     host = argv[1];	
+	}
+	sockfd = tcp_connect(host);
+        t_start = time(NULL);
+	if(sockfd < 0)
+	{
+		printf("\tERROR:Make sure that the server have been in runing.\n");	
+		exit(1);
+	}
 
-  //connet socket
-  dbtime_startTest("Connect & Recv");
-  connectClient(clientfd,&servaddr);
-
-  int nClose = 0;
-  int flag = 0;
-  int nCount = 0; 
-  int nWrite = 0;
-  int nNum = 0;
-  long int filesize = 1;
-  FILE* fp = NULL;
-  while(1)
-  {
-    char buffer[1024]={0};
-    if(nNum >= filesize)
-    {
-       dbtime_endAndShow();
-       dbtime_startTest ("Sleep 5s");
-        sleep(5);
-	dbtime_endAndShow ();
-	dbtime_finalize ();
-       fclose(fp);
-
-       char md5_sum[MD5_LEN + 1];
-       if(!CalcFileMD5(FILENAME, md5_sum))
-      {
-       puts("Error occured!");
-       break;
-      }
-       nClose = read(clientfd,buffer,1023);
-       printf("buffer: %s\n", buffer);
-       if(strcmp(buffer,md5_sum) == 0)
-       {
-          printf(" ***********over**********\n");
-          break;
-       }
-       printf("*******the file has been modified*********\n");        
-        
-    }
-    
-    
-    if(0 == flag)
-    {
-       nClose = read(clientfd,buffer,1023);
-       buffer[nClose] = '\0';
-       filesize = atol(buffer);
-       printf("filesize : %ld\n",filesize);
-       fp = fopen(FILENAME,"w+");
-       if(fp == NULL)
-       {
-	  printf("fail to create file\n");
-          break;
-       } 
-       flag = 1;
-       continue;
-    }
-    nClose = read(clientfd,buffer,1023);
-    buffer[nClose] = '\0';
-    printf("count:%d\n",nCount++);
-    printf("%d \n",nClose);
-    if(nClose<0)
-    {
-       printf("failed to recieve data from server\n");
-       break;
-    }
-    
-    nWrite = fwrite(buffer,1,nClose,fp);
-    
-    if(nWrite==0)
-    {
-       printf("fail to read file\n");
-    }
-    fclose(fp);
-    fp = fopen(FILENAME,"a+");
-    nNum += nClose;
-    printf("nNum :%ld\n",nNum);
-  }
-  
-  close(clientfd);
-  return 0;
+        char buffer[MAXBUF]={0};
+        read(sockfd,buffer,MAXBUF);
+ 
+        rcv_data(sockfd,FILENAME);//接收数据函数
+        t_end = time(NULL);
+       
+        char md5[MD5_LEN+1];
+        strcpy(md5,GetfileMD5(FILENAME));   
+       // printf("buffer: %s\n",buffer); 
+        if(strcmp(buffer,md5) == 0)
+        {
+          printf("the total time :%.0fs\n",difftime(t_end,t_start));
+        }
+        else
+        printf("*******the file has been modified*********\n");   
+        close(sockfd);
+	exit(0);
 }
+
