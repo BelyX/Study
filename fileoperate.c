@@ -1,7 +1,4 @@
 #include "fileoperate.h"
-static int read_cnt;
-static char *read_ptr = NULL;
-static char read_buf[MAXLINE];
 
 int sendmd5(int fd,char *filename)
 {
@@ -67,55 +64,6 @@ ssize_t writen(int fd,const void *buf,size_t nbytes)
 	return (nbytes);
 }
 
-ssize_t n_read(int fd,char *ptr)
-{
-	if(read_cnt <= 0)
-	{
-	again:
-		if((read_cnt = read(fd,read_buf,sizeof(read_buf))) < 0)
-		{
-			if(errno == EINTR)
-			{
-				goto again;	
-			}
-			return (-1);
-		}else if(read_cnt == 0)
-		{
-			return (0);	
-		}
-		read_ptr = read_buf;
-	}
-	read_cnt--;
-	*ptr = *read_ptr++;
-	return (1);
-}
-
-ssize_t read_line(int fd,void *vptr,size_t maxlen)
-{
-	ssize_t n,rc;
-	char c,*ptr;
-
-	ptr = vptr;
-	for(n = 1;n < maxlen;n++)
-	{
-		if((rc = n_read(fd,&c)) == 1)
-		{
-			*ptr++ = c;
-			if(c == '\n')  break;	//new line is stored.
-		}else if(rc == 0)
-		{
-			*ptr = 0;	
-			return (n - 1); //end of file,n - 1 bytes were read.
-		}else
-		{
-			return (-1); //error occured.	
-		}
-	}
-
-	*ptr = 0;
-	return (n);
-}
-
 
 /*接收数据的函数参数sockfd是已经建立的socket连接的描述符*/
 int rcv_data(int sockfd,char* filename)
@@ -123,7 +71,7 @@ int rcv_data(int sockfd,char* filename)
 	size_t e = 0;
 	FILE *fd = NULL;
 	unsigned int count = 0;
-	char buf4receive[MAXLINE + 1] = {0};
+	char buf[MAXLINE + 1] = {0};
 	
 	if(sockfd < 0)//如果描述小于零则直接退出
 	{
@@ -140,12 +88,11 @@ int rcv_data(int sockfd,char* filename)
 
 	while(1)
 	{
-		count = readn(sockfd,buf4receive,MAXLINE);//从socket连接读取数据
+		count = readn(sockfd,buf,MAXLINE);//从socket连接读取数据
 		if(count > 0) //如果count大于零则表示读到了数据
 		{
 		      
-		       e = fwrite(buf4receive,sizeof(char),count,fd);//将数据写到文件里
-		       //e是实际写到文件中的字节数，如果实际写的和我们要求的不同，则表示写文件出错
+		       e = fwrite(buf,sizeof(char),count,fd);//将数据写到文件
 		       if(e != count)
 		       {
 		      		printf("ERROR:write data to file failed!\n"); 
@@ -174,18 +121,18 @@ int send_data(int sockfd,char* filename)
 {
 	FILE *fd = NULL;
 	unsigned int count = 0;
-	char buf4send[MAXLINE + 1] = {0};
+	char buf[MAXLINE + 1] = {0};
 
-	fd = fopen(filename,"r");//打开当前目录下名为1.txt的文件
+	fd = fopen(filename,"r");
 	if(fd == NULL)
 	{
 		printf("ERROR:Open file 'a' failed.\n");	
 		close(sockfd);
 		exit(1);
 	}
-	while((count = fread(buf4send,sizeof(char),MAXLINE,fd)))//从文件中读取数据
+	while((count = fread(buf,sizeof(char),MAXLINE,fd)))//从文件中读取数据
 	{
-		writen(sockfd,buf4send,count);//穿送给服务器
+		writen(sockfd,buf,count);
 	}
 	fclose(fd);
 

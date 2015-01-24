@@ -13,7 +13,5 @@
 #endif
 int rcv_data(int sockfd,char* filename);
 int send_data(int sockfd,char* filename);
-ssize_t writen(int fd,const void *buf,size_t nbytes);
-ssize_t readn(int fd,void *buf,size_t nbytes);
 int sendmd5(int fd,char *filename);
 #endif

@@ -32,13 +32,12 @@ int main(int argc,char **argv)
  
         rcv_data(sockfd,FILENAME);//接收数据函数
         t_end = time(NULL);
-       
+        printf("the total time :%.0fs\n",difftime(t_end,t_start));
         char md5[MD5_LEN+1];
         strcpy(md5,GetfileMD5(FILENAME));   
-       // printf("buffer: %s\n",buffer); 
         if(strcmp(buffer,md5) == 0)
         {
-          printf("the total time :%.0fs\n",difftime(t_end,t_start));
+          printf("succeed !!!\n");
         }
         else
         printf("*******the file has been modified*********\n");   
