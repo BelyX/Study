@@ -1,0 +1,20 @@
+1.进程的调试
+ps -a   //显示进程ID号
+gdb attach <pid>  //附着到子进程
+set follow-fork-mode <child/parent>   //可以在父进程与子进程中切换调试
+
+2.调试进程
+gdb file
+b <行号或都要执行的地址>   //打断点
+run  // 运行程序并跳转到第一个断点处
+delete point  //删除断点
+c    //运行程序到下一个断点处
+n    // 执行下一步
+si  //执行下一步并到程序内部
+
+3.调试细节
+x/x addr   //以十六制查看addr的内容，也可以是寄存器里的内容
+x/s addr   //以字符串的形式查看addr的内容
+p n    //打印出变量n的值
+
+
